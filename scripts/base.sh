@@ -25,9 +25,9 @@ wget -O /root/logosmall.png https://daidemos.com/$(< /root/companycompact.txt).s
 wget -O /root/logo.png https://daidemos.com/$(< /root/companycompact.txt).png
 wget -O /root/ip.txt icanhazip.com
 
-wget -O /etc/apt/sources.list https://raw.githubusercontent.com/garrettrowe/watsonAutomation/main/scripts/sources.list
-wget -O /tmp/zipcodes-table.csv https://raw.githubusercontent.com/garrettrowe/watsonAutomation/main/scripts/zipcodes-table.csv
-wget -O /tmp/medprocedure-table.csv https://raw.githubusercontent.com/garrettrowe/watsonAutomation/main/scripts/medprocedure-table.csv
+wget -O /etc/apt/sources.list https://raw.githubusercontent.com/TechD-git/watsonDemos/main/scripts/sources.list
+wget -O /tmp/zipcodes-table.csv https://raw.githubusercontent.com/TechD-git/watsonDemos/main/scripts/zipcodes-table.csv
+wget -O /tmp/medprocedure-table.csv https://raw.githubusercontent.com/TechD-git/watsonDemos/main/scripts/medprocedure-table.csv
 
 echo "$(< /root/ip.txt)  $(< /root/instnum.txt).daidemos.com" >> /etc/hosts
 
@@ -61,11 +61,11 @@ openssl req -nodes -newkey rsa:2048 -keyout /root/.node-red/node-key.pem -out /r
 openssl x509 -req -in /root/.node-red/node-csr.pem -signkey /root/.node-red/node-key.pem -out /root/.node-red/node-cert.pem
 
 curl -d "Instance=$(< /root/instnum.txt)&Log=Starting Data Aggregator" -X POST https://daidemos.com/log
-wget -O /root/da/package.json https://raw.githubusercontent.com/garrettrowe/watsonAutomation/main/dataAggregator/package.json
-wget -O /root/da/data_aggregator.js https://raw.githubusercontent.com/garrettrowe/watsonAutomation/main/dataAggregator/data_aggregator.js
-wget -O /root/da/pmw.js https://raw.githubusercontent.com/garrettrowe/watsonAutomation/main/dataAggregator/pmw.js
-wget -O /root/da/bg.js https://raw.githubusercontent.com/garrettrowe/watsonAutomation/main/dataAggregator/bg.js
-wget -O /root/tsend https://raw.githubusercontent.com/garrettrowe/watsonAutomation/main/scripts/tsend
+wget -O /root/da/package.json https://raw.githubusercontent.com/TechD-git/watsonDemos/main/dataAggregator/package.json
+wget -O /root/da/data_aggregator.js https://raw.githubusercontent.com/TechD-git/watsonDemos/main/dataAggregator/data_aggregator.js
+wget -O /root/da/pmw.js https://raw.githubusercontent.com/TechD-git/watsonDemos/main/dataAggregator/pmw.js
+wget -O /root/da/bg.js https://raw.githubusercontent.com/TechD-git/watsonDemos/main/dataAggregator/bg.js
+wget -O /root/tsend https://raw.githubusercontent.com/TechD-git/watsonDemos/main/scripts/tsend
 chmod +x /root/tsend
 npm --prefix /root/da install /root/da
 wget -O /root/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb

@@ -356,7 +356,9 @@ async function getPandL(url) {
         phtml = phtml.replace(/<nav([\S\s]*?)>([\S\s]*?)<\/nav>/gim, "");
 
         let summarizeitems = [];
-        summarizeitems.push(phtml);
+        try{
+            phtml.match(/<article([\S\s]*?)>([\S\s]*?)<\/article>/gi).forEach(element => summarizeitems.push("<html><body><div>" + element + "</div></body></html>"));
+        }catch(fail){}
         
 
 

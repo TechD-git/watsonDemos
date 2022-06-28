@@ -283,6 +283,7 @@ async function getPandL(url) {
 
         await page.evaluate(() => {
             try {
+                $("[aria-label|='legal']").remove();
                 $("[aria-label~='Close']").trigger('click');
                 $("[aria-label|='Close']").trigger('click');
                 $("[aria-label~='close']").trigger('click');

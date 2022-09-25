@@ -55,7 +55,9 @@ const options = {
   onError: onError,
   onProxyReq: relayRequestHeaders,
   ws: true,
-  pathRewrite: function (path, req) {   
+  pathRewrite: function (path, req) {
+    if(req.badtarget)  
+      return path; 
     for (var i in hosts){
       var aReg = new RegExp("/" + hosts[i], '');
       path = path.replace(aReg, "");
@@ -79,6 +81,10 @@ const options = {
       lastHost = a;
       hosts.push(a);
       hosts = [...new Set(hosts)];
+    }
+    if(!a.match(/\.(com|net|org|ai|biz|io)$/i)){
+      req.badtarget = true;
+      return utarget;
     }
     return 'https://' + a;
   },

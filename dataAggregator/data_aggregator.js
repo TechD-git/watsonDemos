@@ -276,7 +276,7 @@ async function getPandL(url) {
         });
 
         links.forEach(function(item, index) {
-            if(item.includes(myArgs[0]))
+            if(item.includes(myArgs[0]) || item.substring(0,1) == "/")
                 crawler.queueURL(encodeURI(item));
         });
         console.log("added: " + links.length + ", queue length: " + crawler.queue.length + " at " + url);
@@ -318,7 +318,6 @@ async function getPandL(url) {
             
             var targetClasses = ["modal", "alert", "alertdialog", "survey", "footer", "header",  "masthead"];
             var targetWholeClasses = [ "status", "cookie", "warning", "WACContainer"];
-            allDivs = $('div');
             allDivs.each(function() {
                 try {
                     if($(this).css('display') && $(this).css('display') == "none" ){
@@ -326,10 +325,6 @@ async function getPandL(url) {
                       return true;
                     }
                     if($(this).css('visibility') && $(this).css('visibility') == "hidden" ){
-                      $(this).remove();
-                      return true;
-                    }
-                    if($(this).css('position') && $(this).css('position') == "static" ){
                       $(this).remove();
                       return true;
                     }

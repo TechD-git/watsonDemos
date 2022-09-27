@@ -108,7 +108,6 @@ crawler.on("fetchstart", async function(queueItem, responseBuffer, response) {
 
 crawler.on("complete", function() {
     console.log("Queue Complete");
-    crawler.queueURL(encodeURI(myArgs[0].replace(/^http:\/\//i, "https://")));
     setInterval(function() {
         crawler.queue.countItems({
             status: "queued"
@@ -277,59 +276,121 @@ async function getPandL(url) {
         });
 
         links.forEach(function(item, index) {
-            crawler.queueURL(encodeURI(item));
+            if(item.includes(myArgs[0]))
+                crawler.queueURL(encodeURI(item));
         });
         console.log("added: " + links.length + ", queue length: " + crawler.queue.length + " at " + url);
 
         await page.evaluate(() => {
             try {
-                $("[aria-label~='Close']").trigger('click');
-                $("[aria-label|='Close']").trigger('click');
-                $("[aria-label~='close']").trigger('click');
-                $("[aria-label|='close']").trigger('click');
-                $('.collapse').show();
-                $("[role='tabpanel']").show();
-                $("iframe").remove();
-                $("nav").remove();
-                $('*').contents().each(function() {
-                    if(this.nodeType === Node.COMMENT_NODE) {
-                        $(this).remove();
+            $("[aria-label|='legal']").remove();
+            $("[aria-hidden|='true']").remove();
+            $("[role|='navigation']").remove();
+            $("[role|='modal']").remove();
+            $("[role|='alert']").remove();
+            $("[role|='alertdialog']").remove();
+            $("[role|='dialog']").remove();
+            $("[role|='tooltip']").remove();
+            $("[role|='banner']").remove();
+            $("iframe").remove();
+            $("head").remove();
+            $("header").remove();
+            $("script").remove();
+            $("style").remove();
+            $("nav").remove();
+            $("img").remove();
+            $("a").remove();
+            $("button").remove();
+            $("link").remove();
+            $("br").remove();
+            $("hr").remove();
+            $("label").remove();
+            $("input").remove();
+            $("option").remove();
+            $("form").remove();
+            $("img").remove();
+            $("svg").remove();
+            $("footer").remove();
+            $("aside").remove();
+            $("noscript").remove();
+            var allDivs = $('div');
+            var topZindex = 5000;
+            
+            var targetClasses = ["modal", "alert", "alertdialog", "survey", "footer", "header",  "masthead"];
+            var targetWholeClasses = [ "status", "cookie", "warning", "WACContainer"];
+            allDivs = $('div');
+            allDivs.each(function() {
+                try {
+                    if($(this).css('display') && $(this).css('display') == "none" ){
+                      $(this).remove();
+                      return true;
                     }
-                });
-                var allDivs = $('div');
-                var topZindex = 5000;
-                var targetRoles = ["modal", "alert", "alertdialog", "tooltip"];
-                var targetClasses = ["modal", "alert", "alertdialog", "survey", "hidden"];
-                allDivs.each(function() {
-                    $(this).find(":hidden").remove();
-                });
-                allDivs = $('div');
-                allDivs.each(function() {
-                    try {
-                        var currentZindex = parseInt($(this).css('z-index'), 10);
-                        if (currentZindex > topZindex) {
-                            $(this).remove();
-                            return true;
-                        }
-                        if (targetRoles.includes($(this).attr("role"))) {
-                            $(this).remove();
-                            return true;
-                        }
-                        var classList = $(this).attr('class').split(/\s+/);
-                        for (var i = 0; i < classList.length; i++) {
-                            for (var j = 0; j < targetClasses.length; j++) {
-                                if (classList[i].includes(targetClasses[j])) {
-                                    $(this).remove();
-                                    return true;
-                                }
-                            }
-                        }
-                    } catch (fail) {}
-                });
-            } catch (err) {}
-        }).catch((err) => {
-            console.log(err);
-        });
+                    if($(this).css('visibility') && $(this).css('visibility') == "hidden" ){
+                      $(this).remove();
+                      return true;
+                    }
+                    if($(this).css('position') && $(this).css('position') == "static" ){
+                      $(this).remove();
+                      return true;
+                    }
+                    var currentZindex = parseInt($(this).css('z-index'), 10);
+                    try{
+                      if (currentZindex > topZindex) {
+                          $(this).remove();
+                          return true;
+                      }
+                    }catch(f){}
+                    try{
+                      var classList = $(this).attr('class').split(/[ -]+/);
+                      for (var i = 0; i < classList.length; i++) {
+                          for (var j = 0; j < targetClasses.length; j++) {
+                              if (classList[i].includes(targetClasses[j])) {
+                                  $(this).remove();
+                                  return true;
+                              }
+                          }
+                      }
+                    }catch(f){}
+                    try{
+                      var idList = $(this).attr('id').split(/[ -]+/);
+                      for (var i = 0; i < idList.length; i++) {
+                          for (var j = 0; j < targetClasses.length; j++) {
+                              if (idList[i].includes(targetClasses[j])) {
+                                  $(this).remove();
+                                  return true;
+                              }
+                          }
+                      }
+                    }catch(f){}
+                    try{
+                      var classList = $(this).attr('class').split(/ +/);
+                      for (var i = 0; i < classList.length; i++) {
+                          for (var j = 0; j < targetWholeClasses.length; j++) {
+                              if (classList[i].includes(targetWholeClasses[j])) {
+                                  $(this).remove();
+                                  return true;
+                              }
+                          }
+                      }
+                    }catch(f){}
+                    try{
+                      var idList = $(this).attr('id').split(/ +/);
+                      for (var i = 0; i < idList.length; i++) {
+                          for (var j = 0; j < targetWholeClasses.length; j++) {
+                              if (idList[i].includes(targetWholeClasses[j])) {
+                                  $(this).remove();
+                                  return true;
+                              }
+                          }
+                      }
+                    }catch(f){}
+                    
+                } catch (f) {
+                }
+            });
+          } catch (f) {
+            console.log(f)
+          }
 
 
         let pageTitle = await page.title().catch((err) => {
@@ -338,194 +399,47 @@ async function getPandL(url) {
         pageTitle = pageTitle.replace(/[-_|\#\@\!\%\^\&\*\(\)\<\>\[\]\{\}]+/gi, " ");
         let pname = url.replace(/http.*\/\//, "").replace(/(\?|#).*/,"").replace(/\/$/, "");
 
-
-        const data = JSON.parse(fs.readFileSync('/root/nlu.txt', 'utf8'));
-
         let phtml = await page.content().catch((err) => {
             console.error(err);
         });
 
-        phtml = phtml.replace(/<head([\S\s]*?)>([\S\s]*?)<\/head>/gi, "");
-        phtml = phtml.replace(/<style([\S\s]*?)>([\S\s]*?)<\/style>/gi, "");
-        phtml = phtml.replace(/<script([\S\s]*?)>([\S\s]*?)<\/script>/gi, "");
-        phtml = phtml.replace(/<button([\S\s]*?)>([\S\s]*?)<\/button>/gi, "");
-        phtml = phtml.replace(/<img([\S\s]*?)>/gi, "");
-        phtml = phtml.replace(/<\/?strong([\S\s]*?)>/gi, "");
         phtml = phtml.replace(/<!--([\S\s]*?)>([\S\s]*?)<\/s-->/gi, "");
-        phtml = phtml.replace(/<ul([\S\s]*?)>([\S\s]*?)<\/ul>/gim, "");
-        phtml = phtml.replace(/<nav([\S\s]*?)>([\S\s]*?)<\/nav>/gim, "");
+        phtml = phtml.replace(/<!--([\S\s]*?)-->/gi, "");
 
-        let summarizeitems = [];
-        summarizeitems.push(phtml);
-        try{
-            phtml.match(/<p([\S\s]*?)>([\S\s]*?)<\/p>/gi).forEach(element => summarizeitems.push("<html><body><div>" + element + "</div></body></html>"));
-        }catch(fail){}
-        try{
-            phtml.match(/<section([\S\s]*?)>([\S\s]*?)<\/section>/gi).forEach(element => summarizeitems.push("<html><body><div>" + element + "</div></body></html>"));
-        }catch(fail){}
-        try{
-            phtml.match(/<div([\S\s]*?)>([\S\s]*?)<p([\S\s]*?)<\/p>([\S\s]*?)<\/div>/gi).forEach(element => summarizeitems.push("<html><body>" + element + "</body></html>"));
-        }catch(fail){}
+        let out = phtml;
+        out = out.replace(/&[a-z]+;/gim, "");
+        out = out.replace(/([\t\n])+/gi, " ");
+        out = out.replace(/<\/div>/gim, ". ");
+        out = out.replace(/<span>TAG\/S:<\/span>/gim, "");
+        out = out.replace(/<\/td>/gim, ". ");
+        out = out.replace(/<([\S\s]*?)>/gim, " ");
+        out = out.replace(/ +\./gim, ". ");
+        out = out.replace(/\.+/gim, ".");
+        out = out.replace(/(\. \.)+/gim, ".");
+        out = out.replace(/ +\./gim, ".");
+        out = out.replace(/ +/gim, " ");
+        out = out.replace(/\.+/gim, ".");
+        out = out.replace(/(, )+/gim, ", ");
+        out = out.replace(/,+/gim, ",");
+        out = out.replace(/^ *\. */gim, "");
 
+        if(out.length < 140)
+            out = "";
 
-        for (var i = 0; i < summarizeitems.length; i++) {
-            if (summarizeitems[i]) {
-            if (summarizeitems[i].length > 300 ){
-                iterate += 1;
-                console.log("Part " + i + " doc length: " + summarizeitems[i].length + " - " + url );
-                let header = {
-                    "Content-type": "application/json",
-                    "authorization": "Basic " + Buffer.from("apikey:" + data.apikey).toString("base64")
-                };
-                let bod = {
-                    "html": summarizeitems[i],
-                    "features": {
-                        "summarization": {
-                            "limit": 8
-                        }
-                    }
-                };
-                let wurl = data.url + "/v1/analyze?version=2020-08-01";
+        let outJSON = {
+            title: pageTitle,
+            text: out,
+            html: phtml,
+            source_link: url
+        };
 
-                let outJSON = {
-                    title: pageTitle,
-                    text: summarizeitems[i],
-                    html: summarizeitems[i],
-                    source_link: url
-                };
-
-                let subtitle = summarizeitems[i].replace(/([\S\s]*?)<h[1-9]([\S\s]*?)>/i, "");
-                subtitle = subtitle.replace(/<\/h([\S\s]*?)>([\S\s]*)/i, "");  
-
-                if (subtitle.length && summarizeitems[i].match(/<h[1-9]/i)){
-                    outJSON.title = pageTitle + ": " + subtitle;
-                    outJSON.title = outJSON.title.replace(/<([\S\s]*?)>/g, "");
-                }
-
-                var options = {
-                    uri: wurl,
-                    headers: header,
-                    method: 'POST',
-                    json: bod
-                };
-                let out = "";
-
-
-                if( i == 0){
-                    (async function(outJSON, pname, iterate, options) {
-                        try {
-                            request(options, function(error, response, body) {
-                                try {
-                                    if (!error && response.statusCode == 200) {
-                                        out = body;
-                                        if (typeof(out.summarization) != "undefined"){
-                                            outJSON.text = out.summarization.text;
-                                            outJSON.html = "<html><body><div><p>" + out.summarization.text.replace(/\&/g, "&amp;") + "</p></div></body></html>";
-                                            let ojsH = hashCode(outJSON.text);
-                                            if (!outitems.includes(ojsH) && outJSON.text.length > 150) {
-                                                outitems.push(ojsH);
-                                                fse.outputFileSync("/root/da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
-                                                console.log("wrote " + pname + iterate + ".json");
-                                                return;
-                                            } else {
-                                                console.log("Dupe hash, skipping " + pname);
-                                                return;
-                                            }
-                                        }else{
-                                            out = outJSON.text;
-                                            out = out.replace(/&[a-z]+;/gim, "");
-                                            out = out.replace(/([\t\n])+/gi, ". ");
-                                            out = out.replace(/<\/div>/gim, ". ");
-                                            out = out.replace(/<\/span>/gim, ". ");
-                                            out = out.replace(/<\/td>/gim, ". ");
-                                            out = out.replace(/<([\S\s]*?)>/gim, " ");
-                                            out = out.replace(/ +\./gim, ". ");
-                                            out = out.replace(/\.+/gim, ".");
-                                            out = out.replace(/(\. \.)+/gim, ".");
-                                            out = out.replace(/ +\./gim, ".");
-                                            out = out.replace(/ +/gim, " ");
-                                           // out = out.replace(/\. *(\w+\s){0,2}\w+[.?!]/gim, "");
-                                            outJSON.text = out;
-                                            outJSON.html = "<html><body><div><p>" + out.replace(/\&/g, "&amp;") + "</p></div></body></html>";
-                                            let ojsH = hashCode(outJSON.text);
-                                            if (!outitems.includes(ojsH) && outJSON.text.length > 150) {
-                                                outitems.push(ojsH);
-                                                fse.outputFileSync("/root/da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
-                                                console.log("wrote " + pname + iterate + ".json");
-                                                return;
-                                            } else {
-                                                console.log("Dupe hash, skipping " + pname);
-                                                return;
-                                            }
-                                        }
-
-                                    } else {
-                                        console.log("Error calling NLU on: " + pname + " : " + JSON.stringify(body));
-                                        out = outJSON.text;
-                                        out = out.replace(/&[a-z]+;/gim, "");
-                                        out = out.replace(/([\t\n])+/gi, ". ");
-                                        out = out.replace(/<\/div>/gim, ". ");
-                                        out = out.replace(/<\/span>/gim, ". ");
-                                        out = out.replace(/<\/td>/gim, ". ");
-                                        out = out.replace(/<([\S\s]*?)>/gim, " ");
-                                        out = out.replace(/ +\./gim, ". ");
-                                        out = out.replace(/\.+/gim, ".");
-                                        out = out.replace(/(\. \.)+/gim, ".");
-                                        out = out.replace(/ +\./gim, ".");
-                                        out = out.replace(/ +/gim, " ");
-                                        //out = out.replace(/\. *(\w+\s){0,2}\w+[.?!]/gim, "");
-                                        outJSON.text = out;
-                                        outJSON.html = "<html><body><div><p>" + out.replace(/\&/g, "&amp;") + "</p></div></body></html>";
-                                        let ojsH = hashCode(outJSON.text);
-                                        if (!outitems.includes(ojsH) && outJSON.text.length > 150) {
-                                            outitems.push(ojsH);
-                                            fse.outputFileSync("/root/da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
-                                            console.log("wrote " + pname + iterate + ".json");
-                                            return;
-                                        } else {
-                                            console.log("Dupe hash, skipping " + pname);
-                                            return;
-                                        }
-                                        return;
-                                    }
-                                } catch (err) {
-                                    console.error(err);
-                                    return;
-                                }
-                            });
-                        } catch (err) {
-                            console.error(err);
-                        }
-                    })(outJSON, pname, iterate, options);
-                }
-                else{
-                    out = outJSON.text;
-                    out = out.replace(/&[a-z]+;/gim, "");
-                    out = out.replace(/([\t\n])+/gi, ". ");
-                    out = out.replace(/<\/div>/gim, ". ");
-                    out = out.replace(/<\/span>/gim, ". ");
-                    out = out.replace(/<\/td>/gim, ". ");
-                    out = out.replace(/<([\S\s]*?)>/gim, " ");
-                    out = out.replace(/ +\./gim, ". ");
-                    out = out.replace(/\.+/gim, ".");
-                    out = out.replace(/(\. \.)+/gim, ".");
-                    out = out.replace(/ +\./gim, ".");
-                    out = out.replace(/ +/gim, " ");
-                  ///  out = out.replace(/\. *(\w+\s){0,2}\w+[.?!]/gim, "");
-                    outJSON.text = out;
-                    outJSON.html = "<html><body><div><p>" + out.replace(/\&/g, "&amp;") + "</p></div></body></html>";
-                    let ojsH = hashCode(outJSON.text);
-                    if (!outitems.includes(ojsH) && outJSON.text.length > 150) {
-                        outitems.push(ojsH);
-                        fse.outputFileSync("/root/da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
-                        console.log("wrote " + pname + iterate + ".json");
-                    } else {
-                        console.log("Dupe hash, skipping " + pname);
-                    }
-                }
-                }
-            } else {
-            }
+        let ojsH = hashCode(outJSON.text);
+        if (!outitems.includes(ojsH) && outJSON.text.length) {
+            outitems.push(ojsH);
+            fse.outputFileSync("/root/da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
+            console.log("wrote " + pname + iterate + ".json");
+        } else {
+            console.log("Dupe hash, skipping " + pname);
         }
 
         if (page)

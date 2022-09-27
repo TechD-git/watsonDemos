@@ -392,6 +392,8 @@ async function getPandL(url) {
             console.log(f)
           }
 
+        });
+
 
         let pageTitle = await page.title().catch((err) => {
             console.error(err);

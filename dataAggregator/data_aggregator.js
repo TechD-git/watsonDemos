@@ -284,7 +284,6 @@ async function getPandL(url) {
         await page.evaluate(() => {
             try {
             $("[aria-label|='legal']").remove();
-            $("[aria-hidden|='true']").remove();
             $("[role|='navigation']").remove();
             $("[role|='modal']").remove();
             $("[role|='alert']").remove();
@@ -315,11 +314,23 @@ async function getPandL(url) {
             $("noscript").remove();
             var allDivs = $('div');
             var topZindex = 5000;
+
+            var skipclasses = ["accordian", "collapse"];
             
             var targetClasses = ["modal", "alert", "alertdialog", "survey", "footer", "header",  "masthead"];
             var targetWholeClasses = [ "status", "cookie", "warning", "WACContainer"];
             allDivs.each(function() {
                 try {
+                    try{
+                      var idList = $(this).attr('class').split(/[ -_]+/);
+                      for (var i = 0; i < idList.length; i++) {
+                          for (var j = 0; j < skipclasses.length; j++) {
+                              if (idList[i].includes(skipclasses[j])) {
+                                  return true;
+                              }
+                          }
+                      }
+                    }catch(f){}
                     if($(this).css('display') && $(this).css('display') == "none" ){
                       $(this).remove();
                       return true;

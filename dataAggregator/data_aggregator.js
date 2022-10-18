@@ -306,7 +306,6 @@ async function getPandL(url) {
             $("label").remove();
             $("input").remove();
             $("option").remove();
-            $("form").remove();
             $("img").remove();
             $("svg").remove();
             $("footer").remove();

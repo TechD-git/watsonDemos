@@ -311,6 +311,12 @@ async function getPandL(url) {
             $("footer").remove();
             $("aside").remove();
             $("noscript").remove();
+            $("video").remove();
+            $("track").remove();
+            $("audio").remove();
+            $("area").remove();
+            $("map").remove();
+            $("object").remove();
             var allDivs = $('div');
             var topZindex = 5000;
 

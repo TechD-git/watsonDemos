@@ -284,6 +284,8 @@ async function getPandL(url) {
         await page.evaluate(() => {
             try {
             $("[aria-label|='legal']").remove();
+            $("[hidden|='true']").remove();
+            $("[hidden|='']").remove(); 
             $("[role|='navigation']").remove();
             $("[role|='modal']").remove();
             $("[role|='alert']").remove();
@@ -298,7 +300,7 @@ async function getPandL(url) {
             $("style").remove();
             $("nav").remove();
             $("img").remove();
-            $("a").remove();
+            //$("a").remove();
             $("button").remove();
             $("link").remove();
             $("br").remove();
@@ -420,7 +422,7 @@ async function getPandL(url) {
         phtml = phtml.replace(/<!--([\S\s]*?)-->/gi, "");
 
         let out = phtml;
-        out = out.replace(/&[a-z]+;/gim, "");
+        out = out.replace(/&[a-z]+;/gim, " ");
         out = out.replace(/([\t\n])+/gi, " ");
         out = out.replace(/<\/div>/gim, ". ");
         out = out.replace(/<span>TAG\/S:<\/span>/gim, "");

@@ -458,7 +458,10 @@ async function getPandL(url) {
                 fse.outputFileSync("/root/da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
                 console.log("wrote " + pname + iterate + ".json");
             } else {
-                console.log("Dupe hash, skipping " + pname);
+                if(outJSON.text.length)
+                    console.log("Dupe hash, skipping " + pname);
+                else
+                    console.log("No Content, skipping " + pname);
             }
         }
 

@@ -418,43 +418,47 @@ async function getPandL(url) {
             console.error(err);
         });
 
-        phtml = phtml.replace(/<!--([\S\s]*?)>([\S\s]*?)<\/s-->/gi, "");
-        phtml = phtml.replace(/<!--([\S\s]*?)-->/gi, "");
+        if( /^[\[{].*[\]}]$/.test(phtml) ){
+            console.log("JSON wordpress page, skipping " + pname);
+        }else{
+            phtml = phtml.replace(/<!--([\S\s]*?)>([\S\s]*?)<\/s-->/gi, "");
+            phtml = phtml.replace(/<!--([\S\s]*?)-->/gi, "");
 
-        let out = phtml;
-        out = out.replace(/&[a-z]+;/gim, " ");
-        out = out.replace(/([\t\n])+/gi, " ");
-        out = out.replace(/<\/div>/gim, ". ");
-        out = out.replace(/<span>TAG\/S:<\/span>/gim, "");
-        out = out.replace(/<\/td>/gim, ". ");
-        out = out.replace(/<([\S\s]*?)>/gim, " ");
-        out = out.replace(/ +\./gim, ". ");
-        out = out.replace(/\.+/gim, ".");
-        out = out.replace(/(\. \.)+/gim, ".");
-        out = out.replace(/ +\./gim, ".");
-        out = out.replace(/ +/gim, " ");
-        out = out.replace(/\.+/gim, ".");
-        out = out.replace(/(, )+/gim, ", ");
-        out = out.replace(/,+/gim, ",");
-        out = out.replace(/^ *\. */gim, "");
+            let out = phtml;
+            out = out.replace(/&[a-z]+;/gim, " ");
+            out = out.replace(/([\t\n])+/gi, " ");
+            out = out.replace(/<\/div>/gim, ". ");
+            out = out.replace(/<span>TAG\/S:<\/span>/gim, "");
+            out = out.replace(/<\/td>/gim, ". ");
+            out = out.replace(/<([\S\s]*?)>/gim, " ");
+            out = out.replace(/ +\./gim, ". ");
+            out = out.replace(/\.+/gim, ".");
+            out = out.replace(/(\. \.)+/gim, ".");
+            out = out.replace(/ +\./gim, ".");
+            out = out.replace(/ +/gim, " ");
+            out = out.replace(/\.+/gim, ".");
+            out = out.replace(/(, )+/gim, ", ");
+            out = out.replace(/,+/gim, ",");
+            out = out.replace(/^ *\. */gim, "");
 
-        if(out.length < 140)
-            out = "";
+            if(out.length < 140)
+                out = "";
 
-        let outJSON = {
-            title: pageTitle,
-            text: out,
-            html: phtml,
-            source_link: url
-        };
+            let outJSON = {
+                title: pageTitle,
+                text: out,
+                html: phtml,
+                source_link: url
+            };
 
-        let ojsH = hashCode(outJSON.text);
-        if (!outitems.includes(ojsH) && outJSON.text.length) {
-            outitems.push(ojsH);
-            fse.outputFileSync("/root/da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
-            console.log("wrote " + pname + iterate + ".json");
-        } else {
-            console.log("Dupe hash, skipping " + pname);
+            let ojsH = hashCode(outJSON.text);
+            if (!outitems.includes(ojsH) && outJSON.text.length) {
+                outitems.push(ojsH);
+                fse.outputFileSync("/root/da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
+                console.log("wrote " + pname + iterate + ".json");
+            } else {
+                console.log("Dupe hash, skipping " + pname);
+            }
         }
 
         if (page)

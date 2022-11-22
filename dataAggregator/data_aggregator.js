@@ -430,8 +430,7 @@ async function getPandL(url) {
             out = out.replace(/<\/div>/gim, ". ");
             out = out.replace(/<span>TAG\/S:<\/span>/gim, "");
             out = out.replace(/<pre ([\S\s]*?)>[\[{].*[\]}]<\/pre>?/gim, "");
-            out = out.replace(/<rss ([\S\s]*?)>([\S\s]*?)<\/rss>?/gim, "");
-            out = out.replace(/<\?xml ([\S\s]*?)\?>/gim, "");
+            out = out.replace(/<html><body><pre ([\S\s]*?)>([\S\s]*?)<\/pre><\/body><\/html>/gim, "");
             out = out.replace(/<\/td>/gim, ". ");
             out = out.replace(/<([\S\s]*?)>/gim, " ");
             out = out.replace(/ +\./gim, ". ");

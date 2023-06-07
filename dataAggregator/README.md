@@ -1,7 +1,7 @@
 You can install these tools as stand-alone products.
 
-Grab this directory incuding package.json into a directory. "npm install" will set it up.
+You need node.js installed prior to running this. https://nodejs.org/en
 
-Data Aggregator will expect a set of NLU credentials at ../nlu.txt Copy the JSON in full from your NLU service credentials into this file.
+Grab this directory incuding package.json into a directory. "npm install" will set it up.
 
 run the tools: node data_aggregator.js https://targetwebsite.com

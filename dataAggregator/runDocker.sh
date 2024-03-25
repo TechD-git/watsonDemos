@@ -1,0 +1,1 @@
+podman run --env-file ./docker.env -p 8080:8080 leighwilliamson/coa-crawler-loader:v6

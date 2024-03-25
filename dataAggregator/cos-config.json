@@ -1,0 +1,4 @@
+{
+    "cos_endpoint_url":"s3.us-south.cloud-object-storage.appdomain.cloud",
+    "cos_bucket": "coa-custom-crawler-output"
+}

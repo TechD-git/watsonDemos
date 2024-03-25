@@ -2,8 +2,8 @@ var Crawler = require("simplecrawler");
 const puppeteer = require('puppeteer-extra')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 puppeteer.use(StealthPlugin())
-var request = require('request');
-const fs = require('fs');
+//var request = require('request');
+//const fs = require('fs');
 const fse = require('fs-extra');
 var myArgs = process.argv.slice(2);
 var iterate = 0;
@@ -13,9 +13,59 @@ var browser = null;
 var otp = null;
 var cont = null;
 
+// module that implements direct document loading to Watson Discovery
+require('dotenv').config();
+const load_discovery = require('./load_discovery');
+// module that implements writing files to IBM Cloud Object Storage (COS)
+const cos_writer = require('./cos_writer_reader');
+
+// get environment variable that determines whether to load documents directly into Discovery
+var directly_load_discovery = false;
+let discovery_load_mode = process.env.DISCOVERY_LOAD;
+if ((discovery_load_mode !== null) && 
+    (discovery_load_mode !== undefined) &&
+    (discovery_load_mode === "direct"))
+    {
+        directly_load_discovery = true;
+    }
+console.log("DISCOVERY_DIRECT_LOAD = " + directly_load_discovery);
+
+// when running in a cloud server, get target url from an environment variable
+let crawl_url = process.env.CRAWLER_URL;
+if ((crawl_url !== null) || (crawl_url !== undefined)){
+    console.log("CRAWLER_URL = " + crawl_url);
+}
+// get the delay between page processing from an environment variable
+let crawler_interval = process.env.CRAWLER_INTERVAL;
+if ((crawler_interval === null) || (crawler_interval === undefined)){
+    crawler_interval = 10000;
+}
+console.log("CRAWLER_INTERVAL = " + crawler_interval);
+
+// get location of root directory for direct file storage from environment variable
+let root_dir = process.env.ROOT_DIR;
+if ((root_dir === null) || (root_dir === undefined)){
+    root_dir = "/root";
+}
+console.log("ROOT_DIR = " + root_dir);
+
+// get location of root directory for direct file storage from environment variable
+let code_engine = (process.env.CODE_ENGINE.toLowerCase() === "true");
+if ((code_engine === null) || (code_engine === undefined)){
+    code_engine = false;
+}
+console.log("CODE_ENGINE = " + code_engine);
+
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
-var crawler = new Crawler(myArgs[0]);
+// use configured target url is one was set in the environment
+var crawler = null;
+if ((crawl_url !== undefined) && (crawl_url !== null)) {
+    crawler = new Crawler(crawl_url);
+}
+else {
+    crawler = new Crawler(myArgs[0]);
+}
 crawler.maxDepth = 4;
 crawler.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0";
 crawler.respectRobotsTxt = false;
@@ -25,7 +75,7 @@ crawler.ignoreWWWDomain = false;
 crawler.downloadUnsupported = false;
 crawler.ignoreInvalidSSL = true;
 crawler.supportedMimeTypes = [/^text\/html/i];
-crawler.interval = 10000;
+crawler.interval = crawler_interval;
 crawler.maxConcurrency = 1;
 crawler.listenerTTL = 120000;
 crawler.allowedProtocols[/^http(s)?$/i];
@@ -102,7 +152,13 @@ crawler.on("fetchstart", async function(queueItem, responseBuffer, response) {
                 qitems = items;      
             var qlen = crawler.queue.length;
             var outStats = {"current": qlen-qitems, "total": qlen};
-            fse.outputFileSync("/root/dastats.json", JSON.stringify(outStats));
+            if (code_engine){
+                // write statistics to COS (Cloud Object Storage)
+                cos_writer("da/dastats.json",JSON.stringify(outStats));
+            }
+            else {
+                fse.outputFileSync(root_dir + "/dastats.json", JSON.stringify(outStats));
+            }
         });
 });
 
@@ -134,8 +190,9 @@ let height = 1600;
 async function launchBrowser() {
     try {
         const browser = await puppeteer.launch({
-            executablePath: '/usr/bin/google-chrome',
-            headless: true,
+        //    executablePath: '/usr/bin/google-chrome',
+        //    headless: true,
+            headless: "new",
             defaultViewport: { width, height },
             ignoreHTTPSErrors: true,
             args: [   '--no-sandbox', 
@@ -462,7 +519,20 @@ async function getPandL(url) {
             let ojsH = hashCode(outJSON.text);
             if (!outitems.includes(ojsH) && outJSON.text.length) {
                 outitems.push(ojsH);
-                fse.outputFileSync("/root/da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
+                
+                if (directly_load_discovery){
+                    var filename = pname + iterate + ".json";
+                    console.log("Loading Discovery with: " + filename);
+                    await load_discovery(outJSON, filename);
+                }
+                else if (code_engine){
+                        cos_writer("da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
+                    }
+                    else {
+                        // code below writes to local file system
+                        fse.outputFileSync(root_dir + "/da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
+                    }
+                
                 console.log("wrote " + pname + iterate + ".json");
             } else {
                 if(outJSON.text.length)
@@ -498,7 +568,13 @@ async function main() {
         const ans = await getOTP().catch((err) => {
             console.error(err);
         });
-        fse.outputFileSync("/root/dastats.json", JSON.stringify({"current": crawler.queue.length, "total": crawler.queue.length}));
+        if (code_engine){
+            // write statistics to COS (Cloud Object Storage)
+            cos_writer("da/dastats.json", JSON.stringify({"current": crawler.queue.length, "total": crawler.queue.length}));
+        }
+        else {
+            fse.outputFileSync(root_dir + "/dastats.json", JSON.stringify({"current": crawler.queue.length, "total": crawler.queue.length}));   
+        }    
         if (browser)
             await browser.close().catch((err) => {
                 console.error(err);

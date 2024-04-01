@@ -1,5 +1,6 @@
 require('dotenv').config();
-const request = require('request')
+// module that implements writing files to IBM Cloud Object Storage (COS)
+const object_storage = require('./cos_writer_reader');
 
 let discovery_apikey = process.env.DISCOVERY_APIKEY;
 if(discovery_apikey) {console.log('DISCOVERY_APIKEY set: ' + discovery_apikey);}
@@ -14,75 +15,45 @@ let discovery_collection = process.env.DISCOVERY_COLLECTION;
 if(discovery_collection) {console.log('DISCOVERY_COLLECTION set: ' + discovery_collection);}
 else {console.log('No DISCOVERY_COLLECTION set!');}
 
+async function discovery_load(filename, jsonData){
 
-const DiscoveryV2 = require('ibm-watson/discovery/v2');
-const { IamAuthenticator } = require('ibm-watson/auth');
-// get a handle for Watson Discovery instance: "Watson Discovery for NeuralSeek"
-const discovery = new DiscoveryV2({
-  version: '2023-03-31',
-  authenticator: new IamAuthenticator({
-    apikey: discovery_apikey,
-  }),
-  serviceUrl: discovery_url,
-});
+  const DiscoveryV2 = require('ibm-watson/discovery/v2');
+  const { IamAuthenticator } = require('ibm-watson/auth');
+  // get a handle for Watson Discovery instance: "Watson Discovery for NeuralSeek"
+  const discovery = new DiscoveryV2({
+    version: '2023-03-31',
+    authenticator: new IamAuthenticator({
+      apikey: discovery_apikey,
+    }),
+    serviceUrl: discovery_url,
+  });
 
-async function load(doc, filename){
-  var options = {
-//    uri:'https://gateway.watsonplatform.net/discovery/api/v1/environments/'+process.env.DISCOVERY_ENVIRONMENT_ID+'/collections/'+process.env.DISCOVERY_COLLECTION_ID+'/documents?version=2016-12-01&configuration_id='+process.env.DISCOVERY_CONFIGURATION_ID,
-    uri: discovery_url + "/v2/projects/" + discovery_project + "/collections/" + discovery_collection + "/documents?version=2023-03-31",
-    method: 'POST',
-    formData: {
-        metadata: {
-            doc: JSON.stringify(doc)
-        }
-    },
-    auth: {
-       user: "apikey",
-       pass: discovery_apikey
-    },
-};
+  console.log(`Uploading file: ${filename}.`);
 
-request(options, function(err, httpResponse, body){
-    if(err){
-      console.log(err);
-    }
-    console.dir(body);
-});
+  var Readable = require('stream').Readable
 
+  var s = new Readable()
+  s.push(jsonData)    // the string you want
+  s.push(null)      // indicates end-of-file basically - the end of the stream
+  
+  const params = {
+    projectId: discovery_project, 
+    collectionId: discovery_collection, 
+    file: s,
+    filename: filename
+    };
+
+   
+  await discovery.addDocument(params)
+    .then(response => {
+      console.log(JSON.stringify(response.result, null, 2));
+    })
+    .catch(err => {
+      console.log('error:', err);
+    });
+
+  console.log("Finished uploading file.");
 }
 
-async function discovery_load(input, filename){
 
-  console.log("Uploading " + filename +"...");
-  console.log(input);
-  const file_part = ReadableStream.from(JSON.stringify(input));
-
-    const params = {
-        projectId: discovery_project, 
-        collectionId: discovery_collection, 
-        file: file_part,
-        filename: filename,
-        fileContentType: 'application/json',
-        metadata: {
-          filename: filename,
-          file_type: "json"}
-      };
-      
-      var document_obj = {
-        environment_id: discovery_project,
-        collection_id: discovery_collection,
-        file: input
-      };
-
-    discovery.addJsonDocument(document_obj)
-        .then(response => {
-          console.log(JSON.stringify(response.result, null, 2));
-        })
-        .catch(err => {
-          console.log('error:', err);
-        });
-
-
-};
-
-module.exports = load;
+module.exports = discovery_load;

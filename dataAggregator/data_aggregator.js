@@ -12,14 +12,14 @@ var outitems = [];
 var browser = null;
 var otp = null;
 var cont = null;
-
+// ------------------ code modified by Leigh Williamson -------------------
 // module that implements direct document loading to Watson Discovery
-require('dotenv').config();
 const load_discovery = require('./load_discovery');
 // module that implements writing files to IBM Cloud Object Storage (COS)
-const cos_writer = require('./cos_writer_reader');
+const object_storage = require('./cos_writer_reader');
 
 // get environment variable that determines whether to load documents directly into Discovery
+require('dotenv').config();
 var directly_load_discovery = false;
 let discovery_load_mode = process.env.DISCOVERY_LOAD;
 if ((discovery_load_mode !== null) && 
@@ -49,15 +49,17 @@ if ((root_dir === null) || (root_dir === undefined)){
 }
 console.log("ROOT_DIR = " + root_dir);
 
-// get location of root directory for direct file storage from environment variable
+// is the crawler running in Code Engine on IBM Cloud? get answer from environment variable
 let code_engine = (process.env.CODE_ENGINE.toLowerCase() === "true");
 if ((code_engine === null) || (code_engine === undefined)){
     code_engine = false;
 }
 console.log("CODE_ENGINE = " + code_engine);
+// -------------------------------------------------------------------------
 
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
+// ------------------ code modified by Leigh Williamson -------------------
 // use configured target url is one was set in the environment
 var crawler = null;
 if ((crawl_url !== undefined) && (crawl_url !== null)) {
@@ -66,6 +68,7 @@ if ((crawl_url !== undefined) && (crawl_url !== null)) {
 else {
     crawler = new Crawler(myArgs[0]);
 }
+// -------------------------------------------------------------------------
 crawler.maxDepth = 4;
 crawler.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0";
 crawler.respectRobotsTxt = false;
@@ -152,13 +155,15 @@ crawler.on("fetchstart", async function(queueItem, responseBuffer, response) {
                 qitems = items;      
             var qlen = crawler.queue.length;
             var outStats = {"current": qlen-qitems, "total": qlen};
+// ------------------ code modified by Leigh Williamson -------------------                
             if (code_engine){
                 // write statistics to COS (Cloud Object Storage)
-                cos_writer("da/dastats.json",JSON.stringify(outStats));
+                object_storage.write_cos_file("da/dastats.json",JSON.stringify(outStats));
             }
             else {
                 fse.outputFileSync(root_dir + "/dastats.json", JSON.stringify(outStats));
             }
+// -------------------------------------------------------------------------                
         });
 });
 
@@ -190,9 +195,11 @@ let height = 1600;
 async function launchBrowser() {
     try {
         const browser = await puppeteer.launch({
+// ------------------ code modified by Leigh Williamson -------------------
         //    executablePath: '/usr/bin/google-chrome',
         //    headless: true,
             headless: "new",
+// ------------------------------------------------------------------------
             defaultViewport: { width, height },
             ignoreHTTPSErrors: true,
             args: [   '--no-sandbox', 
@@ -519,20 +526,22 @@ async function getPandL(url) {
             let ojsH = hashCode(outJSON.text);
             if (!outitems.includes(ojsH) && outJSON.text.length) {
                 outitems.push(ojsH);
-                
-                if (directly_load_discovery){
-                    var filename = pname + iterate + ".json";
-                    console.log("Loading Discovery with: " + filename);
-                    await load_discovery(outJSON, filename);
+// ------------------ code modified by Leigh Williamson -------------------                
+                if (code_engine){
+                    // write file to Cloud Object Storage (COS)
+                    var filename = "da/crawl/" + pname + iterate + ".json";
+                    await object_storage.write_cos_file(filename, JSON.stringify(outJSON));
+                    /*if (directly_load_discovery){
+                        // push that document directly into Watson Discovery
+                        console.log("Loading Discovery with: " + filename);
+                        await load_discovery(filename, JSON.stringify(outJSON));
+                    } */
                 }
-                else if (code_engine){
-                        cos_writer("da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
-                    }
-                    else {
-                        // code below writes to local file system
-                        fse.outputFileSync(root_dir + "/da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
-                    }
-                
+                else {
+                    // code below writes to local file system
+                    fse.outputFileSync(root_dir + "/da/crawl/" + pname + iterate + ".json", JSON.stringify(outJSON));
+                }
+// ------------------------------------------------------------------------
                 console.log("wrote " + pname + iterate + ".json");
             } else {
                 if(outJSON.text.length)
@@ -559,6 +568,7 @@ async function getPandL(url) {
 }
 
 async function main() {
+
     try {
         let browser = await launchBrowser().catch((err) => {
             console.error(err);
@@ -568,13 +578,15 @@ async function main() {
         const ans = await getOTP().catch((err) => {
             console.error(err);
         });
+// ------------------ code modified by Leigh Williamson -------------------                
         if (code_engine){
             // write statistics to COS (Cloud Object Storage)
-            cos_writer("da/dastats.json", JSON.stringify({"current": crawler.queue.length, "total": crawler.queue.length}));
+            await object_storage.write_cos_file("da/dastats.json", JSON.stringify({"current": crawler.queue.length, "total": crawler.queue.length}));
         }
         else {
             fse.outputFileSync(root_dir + "/dastats.json", JSON.stringify({"current": crawler.queue.length, "total": crawler.queue.length}));   
         }    
+// ------------------------------------------------------------------------                
         if (browser)
             await browser.close().catch((err) => {
                 console.error(err);

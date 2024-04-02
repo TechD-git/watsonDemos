@@ -197,8 +197,8 @@ async function launchBrowser() {
         const browser = await puppeteer.launch({
 // ------------------ code modified by Leigh Williamson -------------------
         //    executablePath: '/usr/bin/google-chrome',
-        //    headless: true,
-            headless: "new",
+            headless: true,
+        //    headless: "new",
 // ------------------------------------------------------------------------
             defaultViewport: { width, height },
             ignoreHTTPSErrors: true,

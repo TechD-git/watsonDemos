@@ -395,7 +395,8 @@ async function getPandL(url) {
             var allDivs = $('div');
             var topZindex = 5000;
 
-            var skipclasses = ["accordian", "collapse"];
+//            var skipclasses = ["accordian", "collapse"];
+            var skipclasses = [];
             
             var targetClasses = ["modal", "alert", "alertdialog", "survey", "footer", "header",  "masthead"];
             var targetWholeClasses = [ "status", "cookie", "warning", "WACContainer"];
